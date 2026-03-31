@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /home/paulo/sistemas/pessoal/carteira-api -maxdepth 3 -not -path */vendor/* -not -path */node_modules/* -not -path */storage/* -type d)",
+      "Bash(docker compose:*)"
+    ]
+  }
+}
