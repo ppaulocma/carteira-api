@@ -71,6 +71,12 @@ class WalletService
             throw new HttpException(404, 'Transação não encontrada.');
         }
 
+        $isOwner = $transaction->sender_id === $user->id || $transaction->receiver_id === $user->id;
+
+        if (! $isOwner) {
+            throw new HttpException(403, 'Sem permissão para reverter esta transação.');
+        }
+
         if ($transaction->status === 'reversed') {
             throw new HttpException(400, 'Transação já foi revertida.');
         }

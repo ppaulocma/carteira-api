@@ -271,6 +271,23 @@ class WalletTest extends TestCase
         $response->assertStatus(400)->assertJsonPath('success', false);
     }
 
+    public function test_reverse_fails_when_user_is_not_owner(): void
+    {
+        $owner   = User::factory()->create(['balance' => 100]);
+        $other   = User::factory()->create();
+        $transaction = Transaction::create([
+            'type'        => 'deposit',
+            'amount'      => 100,
+            'receiver_id' => $owner->id,
+            'status'      => 'completed',
+            'created_at'  => now(),
+        ]);
+
+        $response = $this->actingAs($other)->postJson("/api/transactions/{$transaction->id}/reverse");
+
+        $response->assertStatus(403)->assertJsonPath('success', false);
+    }
+
     public function test_reverse_requires_authentication(): void
     {
         $response = $this->postJson('/api/transactions/1/reverse');

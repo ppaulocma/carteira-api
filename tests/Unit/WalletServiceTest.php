@@ -68,11 +68,34 @@ class WalletServiceTest extends TestCase
         $this->service->reverse($user, 99);
     }
 
+    public function test_reverse_throws_when_user_is_not_owner(): void
+    {
+        $user     = new User();
+        $user->id = 1;
+
+        $transaction = new Transaction([
+            'status'      => 'completed',
+            'type'        => 'deposit',
+            'sender_id'   => null,
+            'receiver_id' => 99,
+        ]);
+
+        $this->transactionRepository
+            ->shouldReceive('findById')
+            ->andReturn($transaction);
+
+        $this->expectException(HttpException::class);
+        $this->expectExceptionMessage('Sem permissão para reverter esta transação.');
+
+        $this->service->reverse($user, 1);
+    }
+
     public function test_reverse_throws_when_already_reversed(): void
     {
-        $user = new User();
+        $user     = new User();
+        $user->id = 1;
 
-        $transaction = new Transaction(['status' => 'reversed', 'type' => 'deposit']);
+        $transaction = new Transaction(['status' => 'reversed', 'type' => 'deposit', 'receiver_id' => 1]);
 
         $this->transactionRepository
             ->shouldReceive('findById')
@@ -86,9 +109,10 @@ class WalletServiceTest extends TestCase
 
     public function test_reverse_throws_when_reversing_a_reverse(): void
     {
-        $user = new User();
+        $user     = new User();
+        $user->id = 1;
 
-        $transaction = new Transaction(['status' => 'completed', 'type' => 'reverse']);
+        $transaction = new Transaction(['status' => 'completed', 'type' => 'reverse', 'sender_id' => 1]);
 
         $this->transactionRepository
             ->shouldReceive('findById')
