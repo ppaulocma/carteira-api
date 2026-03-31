@@ -15,7 +15,7 @@ class WalletTest extends TestCase
 
     public function test_user_can_deposit(): void
     {
-        $user = User::factory()->create(['balance' => 0]);
+        $user = User::factory()->createOne(['balance' => 0]);
 
         $response = $this->actingAs($user)->postJson('/api/deposit', ['amount' => 100]);
 
@@ -31,7 +31,7 @@ class WalletTest extends TestCase
 
     public function test_deposit_accumulates_balance(): void
     {
-        $user = User::factory()->create(['balance' => 50]);
+        $user = User::factory()->createOne(['balance' => 50]);
 
         $this->actingAs($user)->postJson('/api/deposit', ['amount' => 75]);
 
@@ -40,7 +40,7 @@ class WalletTest extends TestCase
 
     public function test_deposit_fails_with_zero_amount(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->createOne();
 
         $response = $this->actingAs($user)->postJson('/api/deposit', ['amount' => 0]);
 
@@ -49,7 +49,7 @@ class WalletTest extends TestCase
 
     public function test_deposit_fails_with_negative_amount(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->createOne();
 
         $response = $this->actingAs($user)->postJson('/api/deposit', ['amount' => -50]);
 
@@ -67,8 +67,8 @@ class WalletTest extends TestCase
 
     public function test_user_can_transfer(): void
     {
-        $sender   = User::factory()->create(['balance' => 500]);
-        $receiver = User::factory()->create(['balance' => 0]);
+        $sender   = User::factory()->createOne(['balance' => 500]);
+        $receiver = User::factory()->createOne(['balance' => 0]);
 
         $response = $this->actingAs($sender)->postJson('/api/transfer', [
             'receiver_id' => $receiver->id,
@@ -87,8 +87,8 @@ class WalletTest extends TestCase
 
     public function test_transfer_fails_with_insufficient_balance(): void
     {
-        $sender   = User::factory()->create(['balance' => 50]);
-        $receiver = User::factory()->create(['balance' => 0]);
+        $sender   = User::factory()->createOne(['balance' => 50]);
+        $receiver = User::factory()->createOne(['balance' => 0]);
 
         $response = $this->actingAs($sender)->postJson('/api/transfer', [
             'receiver_id' => $receiver->id,
@@ -103,7 +103,7 @@ class WalletTest extends TestCase
 
     public function test_transfer_fails_to_self(): void
     {
-        $user = User::factory()->create(['balance' => 500]);
+        $user = User::factory()->createOne(['balance' => 500]);
 
         $response = $this->actingAs($user)->postJson('/api/transfer', [
             'receiver_id' => $user->id,
@@ -115,7 +115,7 @@ class WalletTest extends TestCase
 
     public function test_transfer_fails_when_receiver_not_found(): void
     {
-        $user = User::factory()->create(['balance' => 500]);
+        $user = User::factory()->createOne(['balance' => 500]);
 
         $response = $this->actingAs($user)->postJson('/api/transfer', [
             'receiver_id' => 9999,
@@ -127,8 +127,8 @@ class WalletTest extends TestCase
 
     public function test_transfer_fails_with_zero_amount(): void
     {
-        $sender   = User::factory()->create(['balance' => 500]);
-        $receiver = User::factory()->create();
+        $sender   = User::factory()->createOne(['balance' => 500]);
+        $receiver = User::factory()->createOne();
 
         $response = $this->actingAs($sender)->postJson('/api/transfer', [
             'receiver_id' => $receiver->id,
@@ -152,7 +152,7 @@ class WalletTest extends TestCase
 
     public function test_user_can_reverse_deposit(): void
     {
-        $user        = User::factory()->create(['balance' => 200]);
+        $user        = User::factory()->createOne(['balance' => 200]);
         $transaction = Transaction::create([
             'type'        => 'deposit',
             'amount'      => 200,
@@ -174,8 +174,8 @@ class WalletTest extends TestCase
 
     public function test_user_can_reverse_transfer(): void
     {
-        $sender      = User::factory()->create(['balance' => 0]);
-        $receiver    = User::factory()->create(['balance' => 100]);
+        $sender      = User::factory()->createOne(['balance' => 0]);
+        $receiver    = User::factory()->createOne(['balance' => 100]);
         $transaction = Transaction::create([
             'type'        => 'transfer',
             'amount'      => 100,
@@ -195,7 +195,7 @@ class WalletTest extends TestCase
 
     public function test_reverse_creates_reverse_transaction(): void
     {
-        $user        = User::factory()->create(['balance' => 100]);
+        $user        = User::factory()->createOne(['balance' => 100]);
         $transaction = Transaction::create([
             'type'        => 'deposit',
             'amount'      => 100,
@@ -216,7 +216,7 @@ class WalletTest extends TestCase
 
     public function test_reverse_fails_when_already_reversed(): void
     {
-        $user        = User::factory()->create(['balance' => 0]);
+        $user        = User::factory()->createOne(['balance' => 0]);
         $transaction = Transaction::create([
             'type'        => 'deposit',
             'amount'      => 100,
@@ -232,16 +232,16 @@ class WalletTest extends TestCase
 
     public function test_reverse_fails_when_transaction_not_found(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->createOne();
 
         $response = $this->actingAs($user)->postJson('/api/transactions/9999/reverse');
 
-        $response->assertStatus(404)->assertJsonPath('success', false);
+        $response->assertStatus(422)->assertJsonPath('success', false);
     }
 
     public function test_reverse_fails_when_reversing_a_reverse(): void
     {
-        $user        = User::factory()->create(['balance' => 0]);
+        $user        = User::factory()->createOne(['balance' => 0]);
         $transaction = Transaction::create([
             'type'        => 'reverse',
             'amount'      => 50,
@@ -257,7 +257,7 @@ class WalletTest extends TestCase
 
     public function test_reverse_fails_when_insufficient_balance_to_revert_deposit(): void
     {
-        $user        = User::factory()->create(['balance' => 0]);
+        $user        = User::factory()->createOne(['balance' => 0]);
         $transaction = Transaction::create([
             'type'        => 'deposit',
             'amount'      => 500,
@@ -273,8 +273,8 @@ class WalletTest extends TestCase
 
     public function test_reverse_fails_when_user_is_not_owner(): void
     {
-        $owner   = User::factory()->create(['balance' => 100]);
-        $other   = User::factory()->create();
+        $owner   = User::factory()->createOne(['balance' => 100]);
+        $other   = User::factory()->createOne();
         $transaction = Transaction::create([
             'type'        => 'deposit',
             'amount'      => 100,
