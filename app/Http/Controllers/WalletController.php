@@ -4,13 +4,59 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\DepositRequest;
 use App\Http\Requests\TransferRequest;
+use App\Models\Transaction;
+use App\Repositories\UserRepository;
 use App\Services\WalletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class WalletController extends Controller
+abstract class WalletController extends Controller
 {
-    public function __construct(private WalletService $walletService) {}
+    public function __construct(
+        private WalletService $walletService,
+        private UserRepository $userRepository,
+    ) {}
+
+    public function user(Request $request): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data'    => $request->user(),
+        ]);
+    }
+
+    public function transactions(Request $request): JsonResponse
+    {
+        $userId = $request->user()->id;
+
+        $transactions = Transaction::with(['sender:id,name', 'receiver:id,name'])
+            ->where(function ($q) use ($userId) {
+                $q->where('sender_id', $userId)->orWhere('receiver_id', $userId);
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data'    => $transactions,
+        ]);
+    }
+
+    public function findUser(Request $request): JsonResponse
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = $this->userRepository->findByEmail($request->email);
+
+        if (! $user || $user->id === $request->user()->id) {
+            return response()->json(['success' => false, 'message' => 'Usuário não encontrado.'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email],
+        ]);
+    }
 
     public function deposit(DepositRequest $request): JsonResponse
     {
