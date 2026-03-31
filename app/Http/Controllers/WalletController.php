@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\DepositRequest;
+use App\Http\Requests\FindUserRequest;
+use App\Http\Requests\ReverseTransactionRequest;
 use App\Http\Requests\TransferRequest;
 use App\Models\Transaction;
 use App\Repositories\UserRepository;
 use App\Services\WalletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 
 class WalletController extends Controller
 {
@@ -42,10 +45,8 @@ class WalletController extends Controller
         ]);
     }
 
-    public function findUser(Request $request): JsonResponse
+    public function findUser(FindUserRequest $request): JsonResponse
     {
-        $request->validate(['email' => 'required|email']);
-
         $user = $this->userRepository->findByEmail($request->email);
 
         if (! $user) {
@@ -91,7 +92,7 @@ class WalletController extends Controller
         ]);
     }
 
-    public function reverse(Request $request, int $id): JsonResponse
+    public function reverse(ReverseTransactionRequest $request, int $id): JsonResponse
     {
         $transaction = $this->walletService->reverse($request->user(), $id);
 
