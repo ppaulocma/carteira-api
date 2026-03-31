@@ -39,18 +39,27 @@ API REST de carteira financeira digital. Permite cadastro de usuários, autentic
 
 ## Como rodar
 
-### Com Docker
+### Com Sail (recomendado)
+
+Requisitos: Docker.
 
 ```bash
 cp .env.example .env
 # Edite o .env: DB_HOST=mysql, DB_USERNAME=sail, DB_PASSWORD=password, DB_DATABASE=laravel
 
-docker compose up -d
-docker compose exec laravel.test php artisan key:generate
-docker compose exec laravel.test php artisan migrate
+docker run --rm -v $(pwd):/app -w /app composer:latest install --ignore-platform-reqs
+./vendor/bin/sail up -d
+./vendor/bin/sail artisan key:generate
+./vendor/bin/sail artisan migrate
 ```
 
 API disponível em `http://localhost`.
+
+Para parar:
+
+```bash
+./vendor/bin/sail down
+```
 
 ### Sem Docker
 
@@ -71,5 +80,5 @@ API disponível em `http://localhost:8000`.
 ## Testes
 
 ```bash
-php artisan test
+./vendor/bin/sail test
 ```
