@@ -10,7 +10,7 @@ use App\Services\WalletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-abstract class WalletController extends Controller
+class WalletController extends Controller
 {
     public function __construct(
         private WalletService $walletService,
@@ -48,8 +48,12 @@ abstract class WalletController extends Controller
 
         $user = $this->userRepository->findByEmail($request->email);
 
-        if (! $user || $user->id === $request->user()->id) {
+        if (! $user) {
             return response()->json(['success' => false, 'message' => 'Usuário não encontrado.'], 404);
+        }
+
+        if ($user->id === $request->user()->id) {
+            return response()->json(['success' => false, 'message' => 'Você não pode transferir para si mesmo.'], 422);
         }
 
         return response()->json([
